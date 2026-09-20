@@ -1,0 +1,4 @@
+// uni-app 会把本文件的内容注入每个组件的 <style lang="scss">，
+// 因此这里只放变量声明，不放任何会产生输出的 CSS 规则。
+// 路径依赖 vite.config.ts 中为 scss 配置的 includePaths（指向 src/）。
+@import 'styles/tokens.scss';

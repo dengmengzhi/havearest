@@ -1,0 +1,35 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "type": "home",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#E9EAE5",
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/done/done",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#E9EAE5",
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/about/about",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#E9EAE5"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#E9EAE5",
+    "backgroundTextStyle": "dark",
+    "navigationBarTitleText": "小憩一下"
+  },
+  "subPackages": []
+}

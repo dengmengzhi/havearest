@@ -1,0 +1,15 @@
+{
+  "note": "断网时展示的兜底卡片。正式内容在云数据库 cards 集合。本文件结构即 cards 集合的字段契约。正式需求：文字卡 200 张（≤ 80 字）+ 图文卡 100 张（图 ≤ 200KB 走云存储 CDN、文 ≤ 40 字）。分类配比：joke 30% / workplace 30% / trivia 20% / healing 20%。",
+  "items": [
+    { "id": "c-001", "type": "text", "category": "trivia", "text": "人在下午一点到三点之间最容易犯困，和吃没吃午饭关系不大，是生物钟自己安排的。" },
+    { "id": "c-002", "type": "text", "category": "workplace", "text": "会议纪要里最长的那一段，通常是没人愿意认领的那件事。" },
+    { "id": "c-003", "type": "text", "category": "joke", "text": "我的代码昨天还能跑。今天它学会了拒绝。" },
+    { "id": "c-004", "type": "text", "category": "healing", "text": "今天没做完的事，明天还在那儿等你，它跑不掉，你也不用跑。" },
+    { "id": "c-005", "type": "text", "category": "trivia", "text": "盯着屏幕时眨眼次数会减少到平时的三分之一，这就是眼睛发干的原因。" },
+    { "id": "c-006", "type": "text", "category": "workplace", "text": "「这个需求很简单」通常是一句关于时间的预言，而且预言总是错的。" },
+    { "id": "c-007", "type": "text", "category": "joke", "text": "开会开到一半突然被点名，是当代打工人的心脏压力测试。" },
+    { "id": "c-008", "type": "text", "category": "healing", "text": "你今天已经坐了很久了，这本身就挺不容易的。" },
+    { "id": "c-009", "type": "text", "category": "trivia", "text": "站起来走动 90 秒，专注力的恢复效果比再灌一杯咖啡更明显。" },
+    { "id": "c-010", "type": "text", "category": "workplace", "text": "工位上最诚实的东西是那盆绿植，它从不假装自己状态很好。" }
+  ]
+}

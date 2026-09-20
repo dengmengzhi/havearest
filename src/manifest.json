@@ -1,0 +1,25 @@
+{
+  "name": "小憩一下",
+  "appid": "",
+  "description": "工作间隙的小憩陪伴",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "uniStatistics": {
+    "enable": false
+  },
+  "h5": {
+    "darkmode": false
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "minified": true
+    },
+    "usingComponents": true,
+    "darkmode": false,
+    "lazyCodeLoading": "requiredComponents"
+  },
+  "vueVersion": "3"
+}

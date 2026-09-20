@@ -1,0 +1,20 @@
+{
+  "note": "主包随带的兜底问候文案。正式内容在云数据库 greetings 集合，可不发版更新（R9）。本文件结构即 greetings 集合的字段契约，内容同学按此产出 CSV。正式需求：6 时段 × 30 条 + 周末 20 条 = 200 条，每条 ≤ 30 字。",
+  "items": [
+    { "id": "g-welcome", "slot": "earlyMorning", "text": "嗨，我是你的小憩搭子" },
+    { "id": "g-em-001", "slot": "earlyMorning", "text": "刚到工位？先醒十分钟再说" },
+    { "id": "g-em-002", "slot": "earlyMorning", "text": "今天也不用一上来就拼命" },
+    { "id": "g-mo-001", "slot": "morning", "text": "上午过半，眼睛该歇了" },
+    { "id": "g-mo-002", "slot": "morning", "text": "会开完了，脑子还没回来吧" },
+    { "id": "g-no-001", "slot": "noon", "text": "吃完了，趴一会儿不算偷懒" },
+    { "id": "g-no-002", "slot": "noon", "text": "午休就该有午休的样子" },
+    { "id": "g-af-001", "slot": "afternoon", "text": "三点了，脑子该放个风了" },
+    { "id": "g-af-002", "slot": "afternoon", "text": "下午最难熬的一段，陪你过" },
+    { "id": "g-ev-001", "slot": "evening", "text": "快下班了，撑一撑，先歇三分钟" },
+    { "id": "g-ev-002", "slot": "evening", "text": "这个点了，效率本来就不高" },
+    { "id": "g-ni-001", "slot": "night", "text": "还在加班？那更得歇会儿" },
+    { "id": "g-ni-002", "slot": "night", "text": "夜里做的决定，明早再看一遍" },
+    { "id": "g-we-001", "slot": "weekend", "text": "周末了，什么都不干也行" },
+    { "id": "g-we-002", "slot": "weekend", "text": "今天没有工位，只有你" }
+  ]
+}

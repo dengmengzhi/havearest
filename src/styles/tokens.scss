@@ -1,0 +1,82 @@
+// ─────────────────────────────────────────────────────────
+// 设计 token ·「午后工位」
+// 取材：办公室真实物件的低饱和冷调 —— 打印纸、荧光灯、绿植、旧账本。
+// 硬约束：配色低饱和（PRD 非功能·隐蔽性 R4）。
+// 组件内禁止写裸 hex，颜色一律取自本文件。
+// ─────────────────────────────────────────────────────────
+
+// —— 色板（6 值，全部低饱和）——
+$paper: #e9eae5; // 页面背景，偏冷的纸灰
+$card: #f5f5f1; // 卡片底，比背景亮一档；不用阴影
+$ink: #2c322e; // 主文字，带绿灰色相，与 moss 呼应
+$ink-soft: #6e756f; // 分类标签、次要信息、页码点
+$moss: #4f6154; // 主色：倒计时、主按钮、选中态
+$ember: #b0855a; // 全站唯一暖色，只用于在线人数的呼吸点
+
+// 由主色派生，不额外引入色相
+$hairline: rgba(44, 50, 46, 0.14); // 卡片 1rpx 边线
+$ink-faint: rgba(44, 50, 46, 0.18); // 页码点未选中态
+$moss-soft: rgba(79, 97, 84, 0.1); // 选中态浅底
+
+// —— 字体 ——
+// 小程序端无法安全加载自定义字体：wx.loadFontFace 拉网络字体会直接冲击
+// 「主包 ≤1.5MB / 冷启动 ≤1.5s」（R11）。因此只用系统字族，
+// 性格由字重与字号承担，不由字体承担。
+$font-ui: -apple-system, 'PingFang SC', 'Source Han Sans SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+
+// —— 类型尺度（rpx）——
+$fs-display: 140rpx; // 倒计时 / 结束时长，字重 300，负字距
+$fs-greeting: 36rpx; // 问候语
+$fs-body: 34rpx; // 卡片正文
+$fs-option: 30rpx; // 时长选项
+$fs-meta: 24rpx; // 分类标签、在线人数
+$fs-micro: 22rpx; // 页脚说明
+
+$fw-light: 300;
+$fw-normal: 400;
+
+$lh-tight: 1.2;
+$lh-normal: 1.5;
+$lh-loose: 1.7; // 卡片正文
+
+// —— 间距（8rpx 基数）——
+$sp-1: 8rpx;
+$sp-2: 16rpx;
+$sp-3: 24rpx;
+$sp-4: 32rpx;
+$sp-5: 48rpx;
+$sp-6: 64rpx;
+$sp-7: 96rpx;
+
+// —— 形状 ——
+$radius-card: 8rpx; // 纸的切角，不是 SaaS 默认圆角
+$radius-button: 8rpx;
+$card-height: 55vh; // PRD F3：卡片占屏幕高度约 55%
+$card-peek: 8rpx; // 下一张卡从右侧露出的宽度，传达「还有更多」
+
+// —— 可用性 ——
+// PRD 非功能·可用性：主按钮必须落在屏幕下 40% 区域
+$action-zone-top: 60vh;
+
+// —— 动效 ——
+// 全站只有一处非用户触发的动效：在线人数的呼吸点。其余动效必须由用户操作触发。
+$dur-disguise: 200ms; // 伪装层淡入，满足「切换 ≤ 300ms」
+$dur-swipe: 240ms;
+$dur-breath: 4000ms;
+$ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+// —— 伪装层专用 token ——
+// 伪装层刻意不使用上面那套设计语言：它要看起来像一份普通的在线文档，
+// 而不是这个产品的一部分。反差本身就是隐蔽性的关键（PRD F5）。
+// 这些值仍然集中在 token 文件里，组件内不写裸 hex（R4）。
+$dg-bg: #ffffff;
+$dg-text: #333333;
+$dg-heading: #1f1f1f;
+$dg-muted: #8a8a8a;
+$dg-line: #e5e5e5;
+$dg-th-bg: #fafafa;
+$dg-fs-h1: 40rpx;
+$dg-fs-h2: 32rpx;
+$dg-fs-body: 28rpx;
+$dg-fs-meta: 24rpx;
+$dg-lh: 1.5;

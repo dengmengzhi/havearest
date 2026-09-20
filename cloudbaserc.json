@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "envId": "",
+  "functionRoot": "./cloud/functions",
+  "functions": [
+    { "name": "getCards", "timeout": 5, "runtime": "Nodejs18.15", "handler": "index.main", "installDependency": true },
+    { "name": "getGreetings", "timeout": 5, "runtime": "Nodejs18.15", "handler": "index.main", "installDependency": true },
+    { "name": "heartbeat", "timeout": 3, "runtime": "Nodejs18.15", "handler": "index.main", "installDependency": true },
+    { "name": "getOnlineCount", "timeout": 3, "runtime": "Nodejs18.15", "handler": "index.main", "installDependency": true },
+    { "name": "track", "timeout": 5, "runtime": "Nodejs18.15", "handler": "index.main", "installDependency": true }
+  ]
+}
