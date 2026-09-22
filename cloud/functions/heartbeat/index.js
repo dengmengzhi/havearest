@@ -14,7 +14,9 @@ const db = cloud.database()
 exports.main = async () => {
   const { OPENID } = cloud.getWXContext()
 
-  // TODO(第 4 周): upsert { _openid: OPENID, last_seen: new Date() }
+  // TODO(第 4 周): upsert { _id: OPENID, _openid: OPENID, lastSeen: new Date() }
+  //   lastSeen 必须是 Date 对象，不能是数字时间戳 —— TTL 索引只对 BSON Date 生效，
+  //   存成 number 会让 TTL 静默失效，heartbeat 无限增长、在线数虚高。
   void db
   void OPENID
 

@@ -9,3 +9,9 @@ unpackage
 coverage
 cloud/functions/*/node_modules
 .cloudbase
+
+# 微信开发者工具的本地配置。
+# 正确的导入目录是 dist/dev/mp-weixin（已被上面的 dist 忽略），
+# 项目根出现这两个文件说明开发者工具指错了目录。
+project.config.json
+project.private.config.json

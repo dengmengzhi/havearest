@@ -1,4 +1,14 @@
 minimumReleaseAgeExcludePrune: true
+
 trustPolicy: no-downgrade
+# 这两个是传递依赖，且都由上游精确锁定，我们改不了版本。
+# 它们的「信任降级」是跨版本线的误报：pnpm 只按发布日期比较，
+# 主线新版用 CI 带 provenance 发布，而这两个老版本走的是手工发布流程。
+#   semver@6.3.1            ← @babel/* 工具链依赖，触发源是更早发布的 semver@7.5.1
+#   @vitejs/plugin-legacy   ← @dcloudio/vite-plugin-uni 精确锁 5.3.2，触发源是 4.0.4
+trustPolicyExclude:
+  - semver
+  - '@vitejs/plugin-legacy'
+
 dangerouslyAllowAllBuilds: true
 shellEmulator: true

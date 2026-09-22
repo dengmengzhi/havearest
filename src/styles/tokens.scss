@@ -80,3 +80,19 @@ $dg-fs-h2: 32rpx;
 $dg-fs-body: 28rpx;
 $dg-fs-meta: 24rpx;
 $dg-lh: 1.5;
+
+// —— 鱼头像色板 ——
+// 每个用户按 openid 稳定分配一条鱼（src/utils/avatar.ts）。
+// 仍然全部低饱和（R4）：在 moss / ember 之外扩出几个色相用于区分个体，
+// 但饱和度压在同一档，凑在一起不会跳。
+//
+// ⚠️ 这里是色值的单一来源，但 src/static/fish/*.svg 里必须写死同样的十六进制 ——
+//    微信小程序的 SVG 不支持 <style> 元素，也读不到 CSS 变量，改色要两边一起改。
+$fish-moss: #4f6154; // 苔绿
+$fish-ember: #b0855a; // 土黄
+$fish-slate: #5a6b75; // 灰蓝
+$fish-clay: #8a6a66; // 豆沙
+$fish-olive: #6b6b4f; // 橄榄
+$fish-stone: #6e756f; // 石板灰
+
+$avatar-size: 76rpx; // 首页左上角的头像尺寸

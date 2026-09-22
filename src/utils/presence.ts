@@ -18,7 +18,7 @@ export function resolvePresenceLabel(count: number): PresenceLabel {
   const safe = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
 
   if (safe < PRESENCE_EXACT_THRESHOLD)
-    return { text: '此刻有几个人也在歇着', shown: false }
+    return { text: '此刻有99+个人也在小憩', shown: false }
 
   return { text: `此刻 ${safe} 人在小憩`, shown: true }
 }

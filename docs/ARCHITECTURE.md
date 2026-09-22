@@ -23,6 +23,37 @@
 - 因此 `vitest` 只能用 **3.2.4**。vitest ≥ 4 依赖 vite 6+ 才有的 `module-runner` 导出，装得上但一跑就报 `ERR_PACKAGE_PATH_NOT_EXPORTED`
 - `.npmrc` 里的 `strict-peer-dependencies=false` 会掩盖这类冲突，升级依赖后务必实跑一次 `pnpm test`
 
+## 供应链策略（pnpm trustPolicy）
+
+`pnpm-workspace.yaml` 里的 `trustPolicy: no-downgrade` **不是手写的**，是 `@uni-helper/eslint-config` 的 `pnpm/yaml-enforce-settings` 规则强制写入的 —— 跑 `eslint --fix` 就会自动加回来，删掉没用。
+
+它的判定逻辑（来自 pnpm 11.8 源码 `trustChecks.js`）：
+
+- 信任证据分三级：`stagedPublish`(3) > `trustedPublisher`(2) > `provenance`(1)
+- **只按发布日期比较，不看 semver**：只要该包任何一个**更早发布**的版本证据更强，当前版本就被判为 `TRUST_DOWNGRADE` 并拒绝安装
+- 目标版本不是预发布版时，比较时会跳过所有预发布版本
+
+这条规则对「主线用 CI 带 provenance 发布、维护分支手工发布」的包会**稳定误报**，因为老分支的发布日期反而更晚。
+
+### 当前的两处豁免与一处锁版本
+
+| 包 | 处理 | 原因 |
+| --- | --- | --- |
+| `semver` | `trustPolicyExclude` | `@babel/*` 工具链的传递依赖，锁在 6.3.1；触发源是早 3 天发布的 `semver@7.5.1`。跨大版本线误报 |
+| `@vitejs/plugin-legacy` | `trustPolicyExclude` | `@dcloudio/vite-plugin-uni` **精确锁定** 5.3.2，我们改不了；触发源是 `4.0.4` |
+| `@uni-helper/uni-types` | **精确锁 `1.1.0`，不要升** | 不是误报：`1.0.0`/`1.0.1`/`1.1.0` 都有 `trustedPublisher`，而 `1.3.0`（当前 latest）**没有任何信任证据**，同一条版本线上信任级别断崖式下降 |
+
+**`@uni-helper/uni-types` 为什么锁死**：`1.1.0` → `1.3.0` 的信任降级是 pnpm 这条策略真正想捕捉的信号。最可能的解释是上游改了发布流程（换 CI、token 过期后手工发布），但从外部无法与「账号被接管后手工发布」区分开。已实测 `1.1.0` 可通过类型检查与双端构建，所以锁在这里。
+
+要升级前先确认新版本恢复了 `trustedPublisher`：
+
+```bash
+curl -s https://registry.npmjs.org/@uni-helper%2Funi-types \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); v=d['dist-tags']['latest']; m=d['versions'][v]; print(v, m.get('_npmUser',{}).get('trustedPublisher'), bool(m.get('dist',{}).get('attestations')))"
+```
+
+**不要用 `trustPolicyIgnoreAfter` 或删 `trustPolicy` 来绕过全部检查** —— 那会把这类信号一起关掉。要放行就按包名精确加进 `trustPolicyExclude`，并在上表写清理由。
+
 ## 分层与依赖方向
 
 依赖只能自上而下，不允许反向或跨层回指。

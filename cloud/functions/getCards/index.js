@@ -18,7 +18,7 @@ exports.main = async (event) => {
 
   // TODO(第 2~3 周): 用聚合 $.sample 随机取样，条件 _id not in excludeIds
   //   const res = await db.collection('cards').aggregate()
-  //     .match({ _id: db.command.nin(excludeIds) })
+  //     .match({ _id: db.command.nin(excludeIds), enabled: true })
   //     .sample({ size: limit })
   //     .end()
   //   取不到时清空 excludeIds 重取一轮，并置 exhausted = true

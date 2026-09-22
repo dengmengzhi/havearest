@@ -1,6 +1,6 @@
 {
   "name": "小憩一下",
-  "appid": "",
+  "appid": "wxc4019689b9f80f28",
   "description": "工作间隙的小憩陪伴",
   "versionName": "1.0.0",
   "versionCode": "100",
@@ -12,7 +12,7 @@
     "darkmode": false
   },
   "mp-weixin": {
-    "appid": "",
+    "appid": "wxc4019689b9f80f28",
     "setting": {
       "urlCheck": false,
       "minified": true

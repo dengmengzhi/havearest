@@ -6,7 +6,7 @@
  */
 
 /** 微信小程序 appid。同时需要填到 src/manifest.json 的 mp-weixin.appid。 */
-export const APPID = ''
+export const APPID = 'wxc4019689b9f80f28'
 
 /** 微信云开发环境 id。同时需要填到仓库根的 cloudbaserc.json。 */
-export const CLOUD_ENV = ''
+export const CLOUD_ENV = 'cloudbase-d3gvlqr8m945f5f02'

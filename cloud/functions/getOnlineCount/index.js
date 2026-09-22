@@ -9,7 +9,7 @@ const ONLINE_WINDOW_MS = 30 * 1000
 
 exports.main = async () => {
   // TODO(第 4 周): db.collection('heartbeat')
-  //   .where({ last_seen: db.command.gt(new Date(Date.now() - ONLINE_WINDOW_MS)) })
+  //   .where({ lastSeen: db.command.gt(new Date(Date.now() - ONLINE_WINDOW_MS)) })
   //   .count()
   void db
   void ONLINE_WINDOW_MS

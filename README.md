@@ -18,7 +18,7 @@ pnpm dev:mp-weixin   # 产物到 dist/dev/mp-weixin
 
 微信小程序端用**微信开发者工具导入 `dist/dev/mp-weixin`**（不是项目根目录）。
 
-appid 和云开发环境 id 尚未填写，此时接入层自动降级到 mock，两端都能跑通界面。
+appid 与云开发环境 id 已填写（见下）。**H5 端始终走 mock**，因为 `wx.cloud` 在浏览器里不存在——想验证真实云函数只能在微信开发者工具里跑。
 
 ## 命令
 
@@ -33,17 +33,24 @@ appid 和云开发环境 id 尚未填写，此时接入层自动降级到 mock�
 | `pnpm check:size` | 主包体积检查（需先构建） |
 | `pnpm cloud:deploy` | 部署云函数（需先配 envId 并登录 tcb） |
 
-## 拿到 appid 与云开发环境后
+## 环境配置
 
-只需改三处：
+小程序 appid 与云开发环境 id 已填在这四处，换环境时改这些地方：
 
-1. `src/manifest.json` → `appid` 与 `mp-weixin.appid`
-2. `src/cloud/env.ts` → `APPID` 与 `CLOUD_ENV`
-3. `cloudbaserc.json` → `envId`
+| 文件 | 字段 | 用途 |
+| --- | --- | --- |
+| `src/manifest.json` | `appid`、`mp-weixin.appid` | 构建期写进产物的 `project.config.json` |
+| `src/cloud/env.ts` | `APPID`、`CLOUD_ENV` | 运行时传给 `wx.cloud.init()` |
+| `cloudbaserc.json` | `envId` | `tcb` 部署云函数的目标环境 |
 
-然后 `npx tcb login` 并 `pnpm cloud:deploy` 部署云函数。
+**云函数尚未部署**，所以小程序端调用会失败并走各 store 的兜底分支（问候回落欢迎语、卡片区显示占位、在线数显示保底文案）。界面不会崩，但内容是空的。部署：
 
-另需在**微信公众平台后台**把最低基础库设为 2.30（这项无法通过代码配置）。
+```bash
+npx tcb login      # 首次，走浏览器授权
+pnpm cloud:deploy  # tcb fn deploy --all
+```
+
+另需在**微信公众平台后台**把最低基础库设为 2.30——这项没有对应的代码字段。
 
 ## 几条硬约束
 

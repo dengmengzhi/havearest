@@ -20,6 +20,10 @@ export const StorageKeys = {
   timerSnapshot: 'timerSnapshot',
   /** 是否首次使用，决定用不用固定欢迎语（PRD F2） */
   hasOpenedBefore: 'hasOpenedBefore',
+  /** 已分配的鱼头像 id。一旦写入就不再变，保证头像是稳定的身份标识 */
+  fishId: 'fishId',
+  /** openid 未就绪时的本地种子，用于在拿到 openid 前也能定下同一条鱼 */
+  avatarSeed: 'avatarSeed',
 } as const
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys]

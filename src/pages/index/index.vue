@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DurationMinutes } from '@/types'
-import { onShow } from '@dcloudio/uni-app'
-import { onUnmounted, ref } from 'vue'
+import { onShow, onUnload } from '@dcloudio/uni-app'
+import { onUnmounted, ref, watch } from 'vue'
 import DisguiseLayer from '@/components/DisguiseLayer.vue'
 import GreetingLine from '@/components/GreetingLine.vue'
 import NapCard from '@/components/NapCard.vue'
@@ -11,32 +11,81 @@ import { useCardsStore } from '@/stores/cards'
 import { useGreetingStore } from '@/stores/greeting'
 import { usePresenceStore } from '@/stores/presence'
 import { useTimerStore } from '@/stores/timer'
+import { useUserStore } from '@/stores/user'
 
 const cards = useCardsStore()
 const greeting = useGreetingStore()
 const presence = usePresenceStore()
 const timer = useTimerStore()
+const user = useUserStore()
 
 const disguised = ref(false)
 
+/** PRD F1：到点提示停留 2 秒再跳转。 */
+const NOTIFY_HOLD_MS = 2000
+
+/**
+ * 首屏内容只拉一次。
+ *
+ * onShow 在每次页面显示时都会触发，包括从结束页 navigateBack 回来 ——
+ * 那时如果重新 pick/fetch，「再歇一会儿」就会换掉问候语、把卡片位置冲回第一张。
+ */
+let contentLoaded = false
+let notifyTimer: ReturnType<typeof setTimeout> | null = null
+
 onShow(() => {
-  void greeting.pick()
-  void cards.fetch()
+  if (!contentLoaded) {
+    contentLoaded = true
+    // 头像先定下来再拉内容：它只读本地、是同步的，不该等网络
+    user.resolveAvatar()
+    void greeting.pick()
+    void cards.fetch()
+  }
   // 心跳只在前台发送，否则在线数会虚高（PRD F4）
   presence.startHeartbeat()
 })
 
+// 到点：提示行浮出 2 秒后进入结束页。无声音、无振动、不弹窗（R3）
+watch(() => timer.status, (status) => {
+  // 任何离开 notifying 的迁移都要撤销待跳转：提示的这 2 秒里用户可能手动结束，
+  // 或者直接选了新时长重新开始，这时再跳结束页就是错的
+  if (status !== 'notifying') {
+    clearNotifyTimer()
+    return
+  }
+  notifyTimer = setTimeout(() => {
+    timer.finish('timeout')
+    uni.navigateTo({ url: '/pages/done/done' })
+  }, NOTIFY_HOLD_MS)
+})
+
+function clearNotifyTimer() {
+  if (notifyTimer) {
+    clearTimeout(notifyTimer)
+    notifyTimer = null
+  }
+}
+
+onUnload(() => {
+  clearNotifyTimer()
+  timer.stopTick()
+})
+
 onUnmounted(() => {
+  clearNotifyTimer()
   presence.stopHeartbeat()
+  timer.stopTick()
 })
 
 function onSelectDuration(minutes: DurationMinutes) {
   timer.start(minutes)
-  // TODO(下一轮): 倒计时归零后浮出提示行，2 秒后 redirectTo 结束页
 }
 
 function onStop() {
-  timer.finish('manual')
+  clearNotifyTimer()
+  // 提示期间点「结束」只是提前跳转，本次小憩其实是走完了的，
+  // reason 仍记 timeout，否则埋点里的 timeout/manual 分布会失真
+  timer.finish(timer.status === 'notifying' ? 'timeout' : 'manual')
   uni.navigateTo({ url: '/pages/done/done' })
 }
 
@@ -53,10 +102,14 @@ function openAbout() {
 <template>
   <view class="home">
     <view class="home__top">
-      <!-- 左上角进关于，右上角进伪装层：都用不起眼的小图标 -->
-      <text class="home__icon" @tap="openAbout">
-        ◦
-      </text>
+      <!-- 左上角是分配到的那条鱼，兼作关于页入口；右上角是伪装层 -->
+      <image
+        class="home__avatar"
+        :src="user.avatar.src"
+        mode="aspectFit"
+        :alt="user.avatar.name"
+        @tap="openAbout"
+      />
       <text class="home__icon" @tap="openDisguise">
         ▤
       </text>
@@ -68,6 +121,11 @@ function openAbout() {
     </view>
 
     <view class="home__stage">
+      <!-- 到点提示：浮在卡片区上方的一行字，2 秒后自动进结束页（PRD F1） -->
+      <text v-if="timer.status === 'notifying'" class="home__notify">
+        该回去了，今天歇得刚刚好
+      </text>
+
       <!-- 下一张卡从右侧露出一条边，像一叠纸：
            比单纯的弹性动效更直接地说明「后面还有」 -->
       <view v-if="cards.hasNext" class="home__peek" />
@@ -85,7 +143,7 @@ function openAbout() {
 
     <view class="home__action">
       <TimerBar
-        :is-running="timer.isRunning"
+        :is-running="timer.status === 'running' || timer.status === 'notifying'"
         :selected="timer.duration"
         :countdown-text="timer.countdownText"
         @select="onSelectDuration"
@@ -119,6 +177,12 @@ function openAbout() {
     color: $ink-soft;
   }
 
+  // 尺寸和右上角的伪装图标看齐，不喧宾夺主 —— 首页的主体仍然是卡片
+  &__avatar {
+    width: $avatar-size;
+    height: $avatar-size;
+  }
+
   &__head {
     margin-top: $sp-4;
   }
@@ -130,6 +194,17 @@ function openAbout() {
     flex: 0 1 $card-height;
     min-height: 0;
     margin-top: $sp-5;
+  }
+
+  &__notify {
+    position: absolute;
+    // 贴近卡片区、与上方的在线人数拉开距离；absolute 定位不影响常态布局，
+    // 不能为了 2 秒的提示把卡片位置挪下去
+    top: -$sp-4;
+    left: 0;
+    z-index: 10;
+    font-size: $fs-meta;
+    color: $moss;
   }
 
   &__peek {

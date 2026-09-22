@@ -17,7 +17,8 @@ exports.main = async (event) => {
   const events = Array.isArray(event.events) ? event.events.slice(0, MAX_BATCH) : []
   const { OPENID } = cloud.getWXContext()
 
-  // TODO(第 4 周): 补 _openid / server_ts 后 db.collection('events').add() 批量写入
+  // TODO(第 4 周): 每条补 _openid 与 createdAt（服务端时间）后 db.collection('events').add() 批量写入
+  //   事件字段展平存放，不要塞进嵌套 payload —— 控制台写聚合查询会方便很多。
   void db
   void OPENID
 

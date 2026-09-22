@@ -12,7 +12,7 @@ const db = cloud.database()
 exports.main = async (event) => {
   const slot = typeof event.slot === 'string' ? event.slot : ''
 
-  // TODO(第 3 周): db.collection('greetings').where({ slot }).limit(50).get()
+  // TODO(第 3 周): db.collection('greetings').where({ slot, enabled: true }).limit(50).get()
   void db
   void slot
 
