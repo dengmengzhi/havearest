@@ -29,12 +29,12 @@ describe('埋点事件常量', () => {
   it('事件名与 PRD 事件表一致', () => {
     expect(AnalyticsEvent.appOpen).toBe('app_open')
     expect(AnalyticsEvent.timerEnd).toBe('timer_end')
-    expect(AnalyticsEvent.cardDwell).toBe('card_dwell')
     expect(AnalyticsEvent.disguiseOn).toBe('disguise_on')
     expect(AnalyticsEvent.feedbackSubmit).toBe('feedback_submit')
   })
 
-  it('覆盖 PRD 事件表的全部 11 个事件', () => {
-    expect(Object.keys(AnalyticsEvent)).toHaveLength(11)
+  // PRD 事件表原有 11 个，card_view / card_dwell 随卡片功能一并移除
+  it('覆盖 9 个事件', () => {
+    expect(Object.keys(AnalyticsEvent)).toHaveLength(9)
   })
 })

@@ -1,4 +1,4 @@
-import type { CardCategory, CardType, Greeting, NapCard, TimerEndReason, TimeSlot } from '@/types'
+import type { Greeting, TimerEndReason, TimeSlot } from '@/types'
 
 /**
  * 云函数出入参契约。
@@ -7,25 +7,37 @@ import type { CardCategory, CardType, Greeting, NapCard, TimerEndReason, TimeSlo
  * 云函数侧（cloud/functions/*）按同一份字段写。
  */
 
-export interface GetCardsRequest {
-  /** 最近看过的卡片 id，最多 200 个（PRD F3） */
-  excludeIds: string[]
-  /** 单次取几张，PRD 默认 20 */
-  limit: number
+export interface LoginRequest {
+  /** 小程序启动场景值，用于来源归因 */
+  scene?: number
+  /** 小程序码参数里的渠道码，如 grp1。服务端会限长限字符后才入库 */
+  channel?: string
 }
 
-export interface GetCardsResponse {
-  cards: NapCard[]
-  /** 池子已耗尽、服务端已重置时为 true，客户端同步清空本地已看列表 */
-  exhausted: boolean
+export interface LoginResponse {
+  /** 由云开发从调用上下文取得，客户端无需任何授权 */
+  openid: string
+  /** 是否首次打开。为 true 时服务端刚建完档 */
+  isNew: boolean
 }
 
 export interface GetGreetingsRequest {
   slot: string
+  /**
+   * 当天已展示过的 id。
+   * 服务端**只用它排序，不用它过滤** —— 见下方响应说明。
+   */
   excludeIds: string[]
 }
 
 export interface GetGreetingsResponse {
+  /**
+   * 该时段的候选集，没看过的排在前面、看过的垫底。
+   *
+   * **服务端保证不因 excludeIds 而返回空数组**：只要库里该时段有文案，
+   * 这里就一定非空。客户端因此可以在本地重试，不需要再发一次请求。
+   * 早先服务端直接过滤已看过的，当天看完后返回空，客户端顶部就空着。
+   */
   greetings: Greeting[]
 }
 
@@ -38,9 +50,17 @@ export interface HeartbeatResponse {
   ok: boolean
 }
 
+export interface ProvincePresence {
+  /** 省级行政区名，与 src/assets/map/provinces.json 的 key 对齐，否则地图上点不亮 */
+  province: string
+  count: number
+}
+
 export interface GetOnlineCountResponse {
   /** 30 秒内有心跳的用户数（PRD F4） */
   count: number
+  /** 省份分布。聚合后只剩「省份 → 人数」，反推不到具体是谁 */
+  provinces: ProvincePresence[]
 }
 
 export interface TrackRequest {
@@ -101,26 +121,8 @@ export interface EventDoc {
   reason?: TimerEndReason
   choice?: 'back' | 'again'
   againCount?: number
-  cardId?: string
-  category?: CardCategory
-  index?: number
-  dwellMs?: number
   fromTimerSeconds?: number
   length?: number
-}
-
-/** cards 集合。`_id` 直接用业务 id（如 `c-001`），getCards 的 excludeIds 就按它查。 */
-export interface CardDoc {
-  _id: string
-  type: CardType
-  category: CardCategory
-  /** 文字卡 ≤ 80 字；图文卡 ≤ 40 字 */
-  text: string
-  /** 仅图文卡。云存储 CDN 地址，图 ≤ 200 KB，竖版 3:4 */
-  imageUrl?: string
-  /** 下架开关：内容出问题时不用删文档，置 false 即可 */
-  enabled: boolean
-  createdAt: number
 }
 
 /** greetings 集合。`_id` 用业务 id（如 `g-af-001`）。 */
@@ -146,6 +148,11 @@ export interface HeartbeatDoc {
   _id: string
   _openid: string
   lastSeen: Date
+  /**
+   * 由云函数从 CLIENTIP 反查，只到省级。解析不出时该字段缺失（不点亮总好过点错）。
+   * 用省而不是市：IP 定位在省级准确率高得多，城市级常落到运营商出口城市。
+   */
+  province?: string
 }
 
 /** feedback 集合。 */
@@ -158,5 +165,4 @@ export interface FeedbackDoc {
 }
 
 /** 供内容导入脚本用：把本地 JSON 的形态转成入库形态。 */
-export type CardSeed = Omit<CardDoc, '_id' | 'enabled' | 'createdAt'> & { id: NapCard['id'] }
 export type GreetingSeed = Omit<GreetingDoc, '_id' | 'enabled' | 'createdAt'> & { id: Greeting['id'] }

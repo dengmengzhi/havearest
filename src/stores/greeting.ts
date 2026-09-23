@@ -36,13 +36,12 @@ export const useGreetingStore = defineStore('greeting', () => {
       const res = await getGreetings({ slot: slot.value, excludeIds: shownIdsToday.value })
       let picked = pickUnseen(res.greetings, shownIdsToday.value)
 
-      // 当天该时段的文案已全部看过。
-      // 候选集是服务端按 excludeIds 过滤后给的，此时它已经是空的，
-      // 所以必须清空去重列表后**重新拉一次**，在空数组上重试是取不到的。
+      // 当天该时段的文案已全部看过，清空去重列表重来。
+      // 服务端保证候选集不会因 excludeIds 而为空（见 GetGreetingsResponse 的说明），
+      // 所以在本地数组上重试就够了，不需要再发一次请求。
       if (!picked) {
         shownIdsToday.value = []
-        const refetched = await getGreetings({ slot: slot.value, excludeIds: [] })
-        picked = pickUnseen(refetched.greetings, [])
+        picked = pickUnseen(res.greetings, [])
       }
 
       applyGreeting(picked)

@@ -45,14 +45,6 @@ const COLLECTIONS = [
     ],
   },
   {
-    name: 'cards',
-    desc: '小憩卡内容库',
-    indexes: [
-      { key: { category: 1 }, name: 'idx_category' },
-      { key: { enabled: 1 }, name: 'idx_enabled' },
-    ],
-  },
-  {
     name: 'greetings',
     desc: '问候文案库。getGreetings 按 slot 查',
     indexes: [

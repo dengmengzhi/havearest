@@ -2,13 +2,22 @@
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { initCloud } from '@/cloud'
 import { useTimerStore } from '@/stores/timer'
+import { useUserStore } from '@/stores/user'
 
 const timer = useTimerStore()
+const user = useUserStore()
 let hiddenAt = 0
 
-onLaunch(() => {
+onLaunch((options) => {
   initCloud()
-  // TODO(下一轮): 静默登录 + 埋点 app_open（scene / hour / is_new）
+
+  // 场景值与渠道码用于来源归因（PRD：投放到不同群时用不同的小程序码参数）
+  const scene = options?.scene ?? 0
+  const channel = (options?.query?.ch as string | undefined) ?? ''
+  user.setLaunchOptions(scene, channel)
+
+  void user.silentLogin()
+  // TODO(下一轮): 埋点 app_open（scene / hour / isNew）
 })
 
 onShow(() => {

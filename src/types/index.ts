@@ -11,22 +11,6 @@ export type TimeSlot
     | 'night' // 18:30 ~ 05:59（跨零点）
     | 'weekend' // 周六 / 周日，覆盖以上时段
 
-/** 卡片分类（PRD 内容需求：冷笑话 30% / 职场吐槽 30% / 冷知识 20% / 一句话治愈 20%）。 */
-export type CardCategory = 'joke' | 'workplace' | 'trivia' | 'healing'
-
-export type CardType = 'text' | 'image'
-
-/** cards 集合 */
-export interface NapCard {
-  id: string
-  type: CardType
-  category: CardCategory
-  /** 文字卡 ≤ 80 字；图文卡 ≤ 40 字 */
-  text: string
-  /** 仅图文卡，云存储 CDN 地址 */
-  imageUrl?: string
-}
-
 /** greetings 集合 */
 export interface Greeting {
   id: string
@@ -67,6 +51,3 @@ export const MAX_AGAIN_COUNT = 2
 
 /** PRD F1 边界：计时中退出超过该时长，视为本次结束。 */
 export const BACKGROUND_ABANDON_MS = 30 * 60 * 1000
-
-/** PRD F4：在线人数低于该值时不显示具体数字，改用保底文案。 */
-export const PRESENCE_EXACT_THRESHOLD = 5

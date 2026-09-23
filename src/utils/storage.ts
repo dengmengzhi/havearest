@@ -8,14 +8,10 @@
 const KEY_PREFIX = 'havearest:'
 
 export const StorageKeys = {
-  /** 已看过的卡片 id，最近 200 个（PRD F3） */
-  seenCardIds: 'seenCardIds',
   /** 当天已展示的问候 id，用于当天不重复（PRD F2） */
   shownGreetingIds: 'shownGreetingIds',
   /** 上面这份 id 列表属于哪一天，跨天自动重置 */
   greetingDate: 'greetingDate',
-  /** 离线可看的卡片缓存，最近 10 张（PRD F3） */
-  cachedCards: 'cachedCards',
   /** 计时器快照，用于冷启动恢复 */
   timerSnapshot: 'timerSnapshot',
   /** 是否首次使用，决定用不用固定欢迎语（PRD F2） */

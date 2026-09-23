@@ -4,39 +4,59 @@
   "functionRoot": "./cloud/functions",
   "functions": [
     {
-      "name": "getCards",
+      "name": "login",
       "timeout": 5,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
-      "installDependency": true
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     },
     {
       "name": "getGreetings",
       "timeout": 5,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
-      "installDependency": true
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     },
     {
       "name": "heartbeat",
       "timeout": 3,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
-      "installDependency": true
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     },
     {
       "name": "getOnlineCount",
       "timeout": 3,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
-      "installDependency": true
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     },
     {
       "name": "track",
       "timeout": 5,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
-      "installDependency": true
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     }
   ]
 }

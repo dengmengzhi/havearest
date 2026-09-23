@@ -1,15 +1,13 @@
 import type {
-  GetCardsRequest,
-  GetCardsResponse,
   GetGreetingsRequest,
   GetGreetingsResponse,
   GetOnlineCountResponse,
   HeartbeatResponse,
+  LoginResponse,
   TrackRequest,
   TrackResponse,
 } from './types'
-import type { Greeting, NapCard } from '@/types'
-import cardsJson from '@/assets/fallback/cards.json'
+import type { Greeting } from '@/types'
 import greetingsJson from '@/assets/fallback/greetings.json'
 import { takeUnseen } from '@/utils/dedupe'
 
@@ -18,14 +16,11 @@ import { takeUnseen } from '@/utils/dedupe'
  * 返回结构与真实云函数完全一致，切换时调用方无需改动。
  */
 
-const cards = cardsJson.items as NapCard[]
 const greetings = greetingsJson.items as Greeting[]
 
-export function mockGetCards(req: GetCardsRequest): GetCardsResponse {
-  const picked = takeUnseen(cards, req.excludeIds, req.limit)
-  if (picked.length === 0)
-    return { cards: takeUnseen(cards, [], req.limit), exhausted: true }
-  return { cards: picked, exhausted: false }
+/** 本地走查用的假身份。openid 给个固定值，好让头像分配在本地也稳定。 */
+export function mockLogin(): LoginResponse {
+  return { openid: 'mock-openid-local-dev', isNew: false }
 }
 
 export function mockGetGreetings(req: GetGreetingsRequest): GetGreetingsResponse {
@@ -37,9 +32,23 @@ export function mockHeartbeat(): HeartbeatResponse {
   return { ok: true }
 }
 
-/** 给一个看起来合理的在线人数，便于本地走查两种文案分支（PRD F4）。 */
+/** 给一份看起来合理的分布，便于本地走查地图的三档光点。 */
 export function mockGetOnlineCount(): GetOnlineCountResponse {
-  return { count: 41 }
+  const provinces = [
+    { province: '广东', count: 11 },
+    { province: '北京', count: 9 },
+    { province: '上海', count: 7 },
+    { province: '浙江', count: 5 },
+    { province: '江苏', count: 4 },
+    { province: '四川', count: 3 },
+    { province: '湖北', count: 2 },
+    { province: '陕西', count: 2 },
+    { province: '福建', count: 2 },
+    { province: '湖南', count: 1 },
+    { province: '黑龙江', count: 1 },
+    { province: '新疆', count: 1 },
+  ]
+  return { count: provinces.reduce((n, p) => n + p.count, 0), provinces }
 }
 
 export function mockTrack(req: TrackRequest): TrackResponse {

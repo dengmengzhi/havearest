@@ -14,11 +14,17 @@ function greeting(id: string): Greeting {
   return { id, slot: 'afternoon', text: `文案 ${id}` }
 }
 
-/** 模拟服务端行为：候选集在请求时就按 excludeIds 过滤掉。 */
+/**
+ * 模拟服务端的真实行为：**只排序不过滤** —— 没看过的排前面，看过的垫底。
+ * 服务端保证返回的候选集不会因 excludeIds 而为空。
+ */
 function serverWith(pool: Greeting[]) {
-  return ({ excludeIds }: { excludeIds: string[] }) => ({
-    greetings: pool.filter(g => !excludeIds.includes(g.id)),
-  })
+  return ({ excludeIds }: { excludeIds: string[] }) => {
+    const seen = new Set(excludeIds)
+    return {
+      greetings: [...pool.filter(g => !seen.has(g.id)), ...pool.filter(g => seen.has(g.id))],
+    }
+  }
 }
 
 beforeEach(() => {
@@ -63,8 +69,7 @@ describe('问候文案去重', () => {
     }
   })
 
-  it('文案库耗尽后重新拉取，而不是在空候选集上重试', async () => {
-    // 只有 2 条，第 3 次请求时服务端会返回空数组
+  it('文案库耗尽后清空去重列表重来，顶部不留空', async () => {
     getGreetings.mockImplementation(serverWith([greeting('a'), greeting('b')]))
     const store = useGreetingStore()
 

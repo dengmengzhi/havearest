@@ -1,6 +1,7 @@
 import type { FishAvatar } from '@/utils/avatar'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { login } from '@/cloud/api'
 import { findFishById, FISH_AVATARS, generateLocalSeed, resolveFish } from '@/utils/avatar'
 import { readStorage, StorageKeys, writeStorage } from '@/utils/storage'
 
@@ -18,6 +19,16 @@ export const useUserStore = defineStore('user', () => {
   const source = ref('')
   /** 分配到的鱼。不是微信头像，是产品生成的标识，不需要任何授权 */
   const avatar = ref<FishAvatar>(FISH_AVATARS[0])
+
+  /** 启动参数，onLaunch 时由 App.vue 传入，登录时一并上报做来源归因。 */
+  const launchScene = ref(0)
+  const launchChannel = ref('')
+
+  function setLaunchOptions(scene: number, channel: string): void {
+    launchScene.value = Number.isFinite(scene) ? scene : 0
+    launchChannel.value = typeof channel === 'string' ? channel : ''
+    source.value = launchChannel.value ? `${launchScene.value}:${launchChannel.value}` : String(launchScene.value)
+  }
 
   /**
    * 确定这个用户是哪条鱼。
@@ -49,18 +60,29 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 静默登录。openid 由云开发在云函数侧从上下文直接取得，
-   * 客户端不需要任何授权动作。
+   * 静默登录。
+   *
+   * openid 由云函数从调用上下文直接取得，客户端**不需要任何授权动作、不弹窗**
+   * （PRD F5 验收：全新用户首次打开无任何授权弹窗）。
+   * 云函数顺带维护 users 集合：首次建档、之后更新 lastOpenAt。
+   *
+   * 头像在登录**之前**就先定下来：它只读本地、是同步的，不该等网络。
+   * 一旦本地已有分配结果，openid 到达后也不会改（见 resolveAvatar），
+   * 所以用户不会看到头像跳变。
    */
   async function silentLogin(): Promise<void> {
-    // TODO(下一轮): 调用云函数取 openid，写入 users 集合（firstOpenAt / lastOpenAt / source）
-    await Promise.resolve()
     resolveAvatar()
+
+    try {
+      const res = await login({ scene: launchScene.value, channel: launchChannel.value })
+      openid.value = res.openid
+      isNew.value = res.isNew
+    }
+    catch {
+      // 登录失败不影响使用：计时、问候、伪装都不依赖 openid，
+      // 只是这次的心跳和埋点会缺身份。下次进来会再试
+    }
   }
 
-  function setSource(scene: number, channel: string): void {
-    source.value = channel ? `${scene}:${channel}` : String(scene)
-  }
-
-  return { openid, isNew, source, avatar, silentLogin, resolveAvatar, setSource }
+  return { openid, isNew, source, avatar, silentLogin, resolveAvatar, setLaunchOptions }
 })

@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "check:forbidden": "node scripts/check-forbidden.mjs",
     "check:size": "node scripts/check-size.mjs",
+    "gen:map": "node scripts/gen-map-asset.mjs",
     "cloud:deploy": "tcb fn deploy --all",
     "db:init": "node scripts/init-db.mjs"
   },

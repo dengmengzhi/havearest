@@ -1,19 +1,19 @@
 import type {
-  GetCardsRequest,
-  GetCardsResponse,
   GetGreetingsRequest,
   GetGreetingsResponse,
   GetOnlineCountResponse,
   HeartbeatResponse,
+  LoginRequest,
+  LoginResponse,
   TrackRequest,
   TrackResponse,
 } from './types'
 import { callFunction, isMockMode } from './index'
 import {
-  mockGetCards,
   mockGetGreetings,
   mockGetOnlineCount,
   mockHeartbeat,
+  mockLogin,
   mockTrack,
 } from './mock'
 
@@ -24,10 +24,10 @@ import {
  * 这样 UI 开发与走查不依赖后端就绪。函数名与 cloud/functions/ 下的目录名一一对应。
  */
 
-export async function getCards(req: GetCardsRequest): Promise<GetCardsResponse> {
+export async function login(req: LoginRequest): Promise<LoginResponse> {
   if (isMockMode())
-    return mockGetCards(req)
-  return callFunction<GetCardsResponse>('getCards', { ...req })
+    return mockLogin()
+  return callFunction<LoginResponse>('login', { ...req })
 }
 
 export async function getGreetings(req: GetGreetingsRequest): Promise<GetGreetingsResponse> {

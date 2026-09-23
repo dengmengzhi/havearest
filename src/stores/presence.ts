@@ -1,3 +1,4 @@
+import type { ProvincePresence } from '@/cloud/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getOnlineCount, heartbeat } from '@/cloud/api'
@@ -10,6 +11,8 @@ const REFRESH_INTERVAL_MS = 30_000
 
 export const usePresenceStore = defineStore('presence', () => {
   const count = ref(0)
+  /** 省份分布，喂给地图点亮光点 */
+  const provinces = ref<ProvincePresence[]>([])
   const label = computed(() => resolvePresenceLabel(count.value))
 
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null
@@ -19,6 +22,7 @@ export const usePresenceStore = defineStore('presence', () => {
     try {
       const res = await getOnlineCount()
       count.value = res.count
+      provinces.value = res.provinces ?? []
     }
     catch {
       // 拉不到就维持上一次的数字，不要把「有人陪」变成 0
@@ -56,5 +60,5 @@ export const usePresenceStore = defineStore('presence', () => {
     }
   }
 
-  return { count, label, refresh, startHeartbeat, stopHeartbeat }
+  return { count, provinces, label, refresh, startHeartbeat, stopHeartbeat }
 })
