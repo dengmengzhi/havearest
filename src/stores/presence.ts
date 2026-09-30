@@ -1,4 +1,5 @@
 import type { ProvincePresence } from '@/cloud/types'
+import type { PresenceLabel } from '@/utils/presence'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getOnlineCount, heartbeat } from '@/cloud/api'
@@ -13,7 +14,15 @@ export const usePresenceStore = defineStore('presence', () => {
   const count = ref(0)
   /** 省份分布，喂给地图点亮光点 */
   const provinces = ref<ProvincePresence[]>([])
-  const label = computed(() => resolvePresenceLabel(count.value))
+  /** 我所在的省份，由云函数按 IP 解析后下发。客户端自己不做任何定位 */
+  const myProvince = ref('')
+  /** 今天来过的人次。瞬时在线太单薄，累计才看得出人气 */
+  const todayCount = ref(0)
+  /** 是否成功拉到过一次数据。没拉到之前不能声称「还没有人」—— 那是把失败说成了事实 */
+  const loaded = ref(false)
+  const label = computed<PresenceLabel>(() =>
+    loaded.value ? resolvePresenceLabel(count.value) : { text: '', shown: false },
+  )
 
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null
   let refreshTimer: ReturnType<typeof setInterval> | null = null
@@ -23,6 +32,8 @@ export const usePresenceStore = defineStore('presence', () => {
       const res = await getOnlineCount()
       count.value = res.count
       provinces.value = res.provinces ?? []
+      todayCount.value = res.todayCount ?? 0
+      loaded.value = true
     }
     catch {
       // 拉不到就维持上一次的数字，不要把「有人陪」变成 0
@@ -30,9 +41,14 @@ export const usePresenceStore = defineStore('presence', () => {
     // TODO(下一轮): 埋点 online_show（count + shown）
   }
 
-  async function sendHeartbeat(): Promise<void> {
+  /** @param first 本次进入前台的第一跳。只有它会把省份记到用户档案上（排行榜要用） */
+  async function sendHeartbeat(first = false): Promise<void> {
     try {
-      await heartbeat()
+      const res = await heartbeat(first)
+      // 解析不出就保留上一次的值：位置不会在 20 秒内变，
+      // IP 库偶发查不到不该让「你在这里」忽然消失
+      if (res.province)
+        myProvince.value = res.province
     }
     catch {
       // 心跳失败静默，下一轮会补上
@@ -43,8 +59,12 @@ export const usePresenceStore = defineStore('presence', () => {
   function startHeartbeat(): void {
     if (heartbeatTimer)
       return
-    void sendHeartbeat()
-    void refresh()
+    // 先写心跳、再拉人数。并发发的话第一次查询很可能还没看见自己的那条心跳，
+    // 首屏就会显示「此刻还没有人在小憩」，而其实我自己就在线
+    void (async () => {
+      await sendHeartbeat(true)
+      await refresh()
+    })()
     heartbeatTimer = setInterval(() => void sendHeartbeat(), HEARTBEAT_INTERVAL_MS)
     refreshTimer = setInterval(() => void refresh(), REFRESH_INTERVAL_MS)
   }
@@ -60,5 +80,5 @@ export const usePresenceStore = defineStore('presence', () => {
     }
   }
 
-  return { count, provinces, label, refresh, startHeartbeat, stopHeartbeat }
+  return { count, provinces, myProvince, todayCount, loaded, label, refresh, startHeartbeat, stopHeartbeat }
 })

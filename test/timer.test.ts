@@ -1,12 +1,19 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useTimerStore } from '@/stores/timer'
+
+const finishSession = vi.fn()
+vi.mock('@/cloud/api', () => ({
+  finishSession: (...a: unknown[]) => finishSession(...a),
+}))
+
+const { useTimerStore } = await import('@/stores/timer')
 
 const T0 = 1_700_000_000_000
 
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.spyOn(Date, 'now').mockReturnValue(T0)
+  finishSession.mockReset().mockResolvedValue({ ok: true })
 })
 
 afterEach(() => {
@@ -343,5 +350,106 @@ describe('到点后的实际时长', () => {
     timer.finish('manual')
 
     expect(timer.elapsed).toBe(47)
+  })
+})
+
+describe('累计小憩的记录', () => {
+  it('结束时累加次数与时长', () => {
+    const timer = useTimerStore()
+    expect(timer.tally.sessions).toBe(0)
+
+    timer.start(5)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 312_000)
+    timer.finish('manual')
+
+    expect(timer.tally.sessions).toBe(1)
+    expect(timer.tally.seconds).toBe(312)
+  })
+
+  it('累加会落盘，下次进来还在', () => {
+    const timer = useTimerStore()
+    timer.start(5)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 180_000)
+    timer.finish('manual')
+
+    // 换一个 store 实例（模拟重新打开小程序），本地存储里应该还有
+    setActivePinia(createPinia())
+    const next = useTimerStore()
+    expect(next.tally.sessions).toBe(1)
+    expect(next.tally.seconds).toBe(180)
+  })
+
+  it('多次小憩持续累加', () => {
+    const timer = useTimerStore()
+    for (const [i, secs] of [120, 300, 60].entries()) {
+      timer.start(5)
+      vi.spyOn(Date, 'now').mockReturnValue(T0 + (i + 1) * 1_000_000)
+      timer.startAt = T0 + (i + 1) * 1_000_000 - secs * 1000
+      timer.finish('manual')
+    }
+
+    expect(timer.tally.sessions).toBe(3)
+    expect(timer.tally.seconds).toBe(480)
+  })
+
+  // 没真正计时就到结束页，计进去会让「第 N 次」虚高
+  it('0 秒的结束不计入累计', () => {
+    const timer = useTimerStore()
+    timer.start(5)
+    timer.finish('manual') // 立刻结束，elapsed 为 0
+
+    expect(timer.tally.sessions).toBe(0)
+  })
+
+  it('后台超时结束同样计入 —— 那段时间用户确实歇了', () => {
+    const timer = useTimerStore()
+    timer.start(10)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 31 * 60_000)
+    timer.syncFromBackground(T0)
+
+    expect(timer.status).toBe('abandoned')
+    expect(timer.tally.sessions).toBe(1)
+  })
+})
+
+describe('把时长同步到云端（排行榜要用）', () => {
+  it('结束时按实际时长上报一次', () => {
+    const timer = useTimerStore()
+    timer.start(5)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 200_000)
+    timer.finish('manual')
+
+    expect(finishSession).toHaveBeenCalledTimes(1)
+    expect(finishSession).toHaveBeenCalledWith({ seconds: 200 })
+  })
+
+  // 没开始就结束不该占一次，否则榜单上会多出一堆 0 秒的记录
+  it('0 秒不上报', () => {
+    const timer = useTimerStore()
+    timer.start(5)
+    timer.finish('manual')
+
+    expect(finishSession).not.toHaveBeenCalled()
+  })
+
+  // 切后台超时同样是一次真实歇过的时间，本地累计算了，云端也该算
+  it('后台放弃也上报', () => {
+    const timer = useTimerStore()
+    timer.start(5)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 90_000)
+    timer.finish('background')
+
+    expect(finishSession).toHaveBeenCalledWith({ seconds: 90 })
+  })
+
+  // 上报失败不能把异常漏到调用方 —— 结束页必须照常跳转
+  it('上报失败不影响结束流程', () => {
+    finishSession.mockRejectedValue(new Error('云函数炸了'))
+    const timer = useTimerStore()
+    timer.start(5)
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 60_000)
+
+    expect(() => timer.finish('manual')).not.toThrow()
+    expect(timer.status).toBe('finished')
   })
 })

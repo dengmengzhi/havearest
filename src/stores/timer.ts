@@ -1,7 +1,10 @@
 import type { DurationMinutes, TimerEndReason, TimerStatus } from '@/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { finishSession } from '@/cloud/api'
 import { BACKGROUND_ABANDON_MS, DEFAULT_DURATION, MAX_AGAIN_COUNT } from '@/types'
+import { readStorage, StorageKeys, writeStorage } from '@/utils/storage'
+import { addSession, EMPTY_TALLY, normalizeTally } from '@/utils/tally'
 import { elapsedSeconds, formatCountdown, remainingSeconds } from '@/utils/time'
 
 /**
@@ -27,6 +30,8 @@ export const useTimerStore = defineStore('timer', () => {
   const startAt = ref(0)
   const againCount = ref(0)
   const endReason = ref<TimerEndReason | null>(null)
+  /** 累计次数与时长，结束页用。以本地为准，云端由 finishSession 另行同步 */
+  const tally = ref(normalizeTally(readStorage(StorageKeys.tally, EMPTY_TALLY)))
   /** 由 tick 驱动，只为触发重算，不参与剩余时间的计算本身 */
   const now = ref(Date.now())
 
@@ -100,6 +105,16 @@ export const useTimerStore = defineStore('timer', () => {
     endReason.value = reason
     status.value = reason === 'background' ? 'abandoned' : 'finished'
     stopTick()
+
+    // 先落本地再上报：结束页要立刻显示，不能等网络
+    const seconds = elapsed.value
+    tally.value = addSession(tally.value, seconds)
+    writeStorage(StorageKeys.tally, tally.value)
+
+    // 同步一份到云端给排行榜用。不 await、失败也不管 ——
+    // 结束页显示的累计以本地为准，网络不该拖住跳转，更不该让跳转失败
+    if (seconds > 0)
+      void finishSession({ seconds }).catch(() => {})
     // TODO(下一轮): 埋点 timer_end（actualSeconds = elapsed）
   }
 
@@ -166,6 +181,7 @@ export const useTimerStore = defineStore('timer', () => {
     startAt,
     againCount,
     endReason,
+    tally,
     isRunning,
     remaining,
     countdownText,

@@ -23,6 +23,13 @@
         "navigationStyle": "custom",
         "backgroundColor": "#E9EAE5"
       }
+    },
+    {
+      "path": "pages/ranking/ranking",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#E9EAE5"
+      }
     }
   ],
   "globalStyle": {

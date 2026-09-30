@@ -4,6 +4,7 @@ import {
   formatCountdown,
   formatDuration,
   remainingSeconds,
+  resolveDoneNote,
   resolveSlot,
 } from '@/utils/time'
 
@@ -122,5 +123,41 @@ describe('elapsedSeconds 实际时长', () => {
   it('时钟回拨时返回 0 而不是负数', () => {
     const startAt = 1_000_000
     expect(elapsedSeconds(startAt, startAt - 5000)).toBe(0)
+  })
+})
+
+describe('resolveDoneNote 结束页的一句话', () => {
+  // 固定一句话用第二次就失效了，所以按实际时长分档
+  it.each([
+    [0, '这次还没开始呢'],
+    [1, '这就回去了？'],
+    [59, '这就回去了？'],
+    [60, '够眼睛歇一歇了'],
+    [179, '够眼睛歇一歇了'],
+    [180, '刚好够脑子转个身'],
+    [419, '刚好够脑子转个身'],
+    [420, '歇透了，回去吧'],
+    [3600, '歇透了，回去吧'],
+  ])('%i 秒 → %s', (seconds, expected) => {
+    expect(resolveDoneNote(seconds)).toBe(expected)
+  })
+
+  it('三种可选时长各自落在不同的档位上', () => {
+    // 3/5/10 分钟如果说同一句话，分档就白做了
+    const notes = [180, 300, 600].map(resolveDoneNote)
+    expect(new Set(notes).size).toBeGreaterThan(1)
+  })
+
+  it('0 秒不硬凑鼓励语', () => {
+    // 没真正计时过却说「歇得刚刚好」，用户一眼看出是占位
+    expect(resolveDoneNote(0)).not.toContain('刚好')
+    expect(resolveDoneNote(0)).not.toContain('歇透')
+  })
+
+  it('异常输入不抛错', () => {
+    for (const bad of [Number.NaN, -5, Number.POSITIVE_INFINITY])
+      expect(() => resolveDoneNote(bad)).not.toThrow()
+    expect(resolveDoneNote(Number.NaN)).toBe('这次还没开始呢')
+    expect(resolveDoneNote(-5)).toBe('这次还没开始呢')
   })
 })

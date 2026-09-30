@@ -57,6 +57,20 @@ describe('在线人数与省份分布', () => {
     await expect(store.refresh()).resolves.toBeUndefined()
   })
 
+  // 云函数没部署、权限没配好时，这里原本会显示「此刻还没有人在小憩」——
+  // 把一次失败说成了事实。拉到之前宁可什么都不说
+  it('一次都没拉到时不出文案，而不是说「还没有人」', async () => {
+    const store = usePresenceStore()
+    expect(store.loaded).toBe(false)
+    expect(store.label.text).toBe('')
+
+    getOnlineCount.mockRejectedValue(new Error('云函数没部署'))
+    await store.refresh()
+
+    expect(store.loaded).toBe(false)
+    expect(store.label.text).toBe('')
+  })
+
   it('真的 0 人时如实显示（不能和失败混为一谈）', async () => {
     getOnlineCount.mockResolvedValue({ count: 0, provinces: [] })
     const store = usePresenceStore()
@@ -94,9 +108,35 @@ describe('心跳的启停', () => {
     getOnlineCount.mockResolvedValue({ count: 1, provinces: [] })
     const store = usePresenceStore()
     store.startHeartbeat()
-    await vi.waitFor(() => expect(heartbeat).toHaveBeenCalled())
+    await vi.waitFor(() => expect(getOnlineCount).toHaveBeenCalled())
 
-    expect(getOnlineCount).toHaveBeenCalled()
+    expect(heartbeat).toHaveBeenCalled()
+    store.stopHeartbeat()
+  })
+
+  // 并发发的话，第一次查询往往还看不见自己刚写的那条心跳，
+  // 首屏就会显示「此刻还没有人在小憩」—— 而其实我自己就在线
+  it('先写完心跳再拉人数，否则第一次查询看不见自己', async () => {
+    const order: string[] = []
+    let releaseHeartbeat = () => {}
+    heartbeat.mockImplementation(() => new Promise((resolve) => {
+      order.push('heartbeat')
+      releaseHeartbeat = () => resolve({ ok: true, province: '广东' })
+    }))
+    getOnlineCount.mockImplementation(async () => {
+      order.push('getOnlineCount')
+      return { count: 1, provinces: [] }
+    })
+
+    const store = usePresenceStore()
+    store.startHeartbeat()
+    await vi.waitFor(() => expect(order).toEqual(['heartbeat']))
+
+    // 心跳还没回来，这时就不该已经查过人数
+    expect(getOnlineCount).not.toHaveBeenCalled()
+
+    releaseHeartbeat()
+    await vi.waitFor(() => expect(order).toEqual(['heartbeat', 'getOnlineCount']))
     store.stopHeartbeat()
   })
 

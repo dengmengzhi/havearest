@@ -48,6 +48,11 @@ export interface HeartbeatRequest {
 
 export interface HeartbeatResponse {
   ok: boolean
+  /**
+   * 云函数按 IP 解析出的省份，解析不出时为空串。
+   * 客户端自己不做任何定位，「你在这里」只能靠这个字段。
+   */
+  province: string
 }
 
 export interface ProvincePresence {
@@ -61,6 +66,46 @@ export interface GetOnlineCountResponse {
   count: number
   /** 省份分布。聚合后只剩「省份 → 人数」，反推不到具体是谁 */
   provinces: ProvincePresence[]
+  /** 今天来过的总人次。瞬时在线数太单薄，累计才看得出这地方有人气 */
+  todayCount: number
+}
+
+export interface FinishSessionRequest {
+  /** 本次实际时长（秒）。服务端会限幅后才累加，见 cloud/functions/finishSession/session.js */
+  seconds: number
+}
+
+export interface FinishSessionResponse {
+  /** 是否累加成功。失败不影响客户端 —— 结束页的累计以本地为准 */
+  ok: boolean
+}
+
+/**
+ * 排行榜条目。
+ *
+ * **刻意不含任何身份字段**：openid 只在云函数内部用来认出「我」那一行，
+ * 不下发。省份是唯一的标识信息，粒度只到省。
+ */
+export interface RankingEntry {
+  /** 名次。并列同名次，下一名跳号 */
+  rank: number
+  /** 省级行政区名。IP 解析不出来时为空串，页面上显示「某处」 */
+  province: string
+  /** 累计小憩秒数 */
+  seconds: number
+  /** 累计小憩次数 */
+  sessions: number
+  mine: boolean
+}
+
+export interface GetRankingResponse {
+  /** 前若干名，已排好序 */
+  entries: RankingEntry[]
+  /**
+   * 我那一行。进榜时与 entries 里的同一条，没进榜时单独给出真实名次；
+   * 还没歇过、或名次算不出来时为 null。
+   */
+  mine: RankingEntry | null
 }
 
 export interface TrackRequest {
@@ -91,9 +136,16 @@ export interface UserDoc {
   lastOpenAt: number
   /** 首次来源：`${scene}:${渠道码}`，如 `1001:grp1` */
   source: string
-  /** 有效小憩次数（真正开始过计时的） */
+  /** 有效小憩次数（真正开始过计时的）。由 finishSession 累加 */
   totalSessions: number
   totalSeconds: number
+  /** 最近一次小憩结束的毫秒时间戳 */
+  lastSessionAt?: number
+  /**
+   * 省级行政区名，排行榜用。
+   * 由 heartbeat 在每次进前台的第一跳写入 —— IP 归属地只有那个函数解析得了。
+   */
+  province?: string
 }
 
 /**

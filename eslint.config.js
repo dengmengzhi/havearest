@@ -38,4 +38,13 @@ export default uniHelper(
       ],
     },
   },
+  {
+    // 必须排在上面的通用规则**之后**：flat config 里后面的配置覆盖前面的。
+    // src/constants/colors.ts 是给 JS 用的颜色定义处（地图 callout 等拿不到 scss 变量的场景），
+    // 规则要禁的是颜色散落各处，不是禁止有定义
+    files: ['src/constants/colors.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
 )

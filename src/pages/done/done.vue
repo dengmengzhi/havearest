@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useTimerStore } from '@/stores/timer'
-import { formatDuration } from '@/utils/time'
+import { formatTallyLine } from '@/utils/tally'
+import { formatDuration, resolveDoneNote } from '@/utils/time'
 
 const timer = useTimerStore()
 
 const durationText = computed(() => formatDuration(timer.elapsed))
+const note = computed(() => resolveDoneNote(timer.elapsed))
+/** 第一次小憩时为空串，那句「这是你第 1 次」没有意义 */
+const tallyLine = computed(() => formatTallyLine(timer.tally))
 
 function backToWork() {
   // TODO(下一轮): 埋点 timer_choice（choice=back）
@@ -28,7 +32,12 @@ function restAgain() {
         {{ durationText }}
       </text>
       <text class="done__note">
-        刚好够脑子转个身
+        {{ note }}
+      </text>
+
+      <!-- 累计是回来的理由：单次结果用完就忘，攒下来的数才会让人想再来 -->
+      <text v-if="tallyLine" class="done__tally">
+        {{ tallyLine }}
       </text>
     </view>
 
@@ -78,6 +87,13 @@ function restAgain() {
     margin-top: $sp-3;
     font-size: $fs-greeting;
     color: $ink;
+  }
+
+  // 比鼓励语退一档：它是背景信息，不该抢走「这次歇了多久」的位置
+  &__tally {
+    margin-top: $sp-4;
+    font-size: $fs-meta;
+    color: $ink-soft;
   }
 
   // 主按钮落在屏幕下 40% 区域

@@ -1,7 +1,10 @@
 import type {
+  FinishSessionRequest,
+  FinishSessionResponse,
   GetGreetingsRequest,
   GetGreetingsResponse,
   GetOnlineCountResponse,
+  GetRankingResponse,
   HeartbeatResponse,
   LoginRequest,
   LoginResponse,
@@ -10,8 +13,10 @@ import type {
 } from './types'
 import { callFunction, isMockMode } from './index'
 import {
+  mockFinishSession,
   mockGetGreetings,
   mockGetOnlineCount,
+  mockGetRanking,
   mockHeartbeat,
   mockLogin,
   mockTrack,
@@ -36,10 +41,26 @@ export async function getGreetings(req: GetGreetingsRequest): Promise<GetGreetin
   return callFunction<GetGreetingsResponse>('getGreetings', { ...req })
 }
 
-export async function heartbeat(): Promise<HeartbeatResponse> {
+/**
+ * @param first 是否是本次进入前台的第一跳。
+ *   只有第一跳才把省份写进用户档案 —— 每 20 秒写一次纯属浪费写次数。
+ */
+export async function heartbeat(first = false): Promise<HeartbeatResponse> {
   if (isMockMode())
     return mockHeartbeat()
-  return callFunction<HeartbeatResponse>('heartbeat', { clientNow: Date.now() })
+  return callFunction<HeartbeatResponse>('heartbeat', { clientNow: Date.now(), first })
+}
+
+export async function finishSession(req: FinishSessionRequest): Promise<FinishSessionResponse> {
+  if (isMockMode())
+    return mockFinishSession()
+  return callFunction<FinishSessionResponse>('finishSession', { ...req })
+}
+
+export async function getRanking(): Promise<GetRankingResponse> {
+  if (isMockMode())
+    return mockGetRanking()
+  return callFunction<GetRankingResponse>('getRanking')
 }
 
 export async function getOnlineCount(): Promise<GetOnlineCountResponse> {

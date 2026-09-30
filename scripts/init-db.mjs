@@ -34,6 +34,8 @@ const COLLECTIONS = [
     desc: '用户。_openid 天然唯一，额外按首次打开时间建索引供留存分组',
     indexes: [
       { key: { firstOpenAt: 1 }, name: 'idx_firstOpenAt' },
+      // 排行榜按累计时长倒序取前 20，没有这条索引就是全表扫描 + 内存排序
+      { key: { totalSeconds: -1 }, name: 'idx_totalSeconds' },
     ],
   },
   {

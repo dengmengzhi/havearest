@@ -20,6 +20,8 @@ export const StorageKeys = {
   fishId: 'fishId',
   /** openid 未就绪时的本地种子，用于在拿到 openid 前也能定下同一条鱼 */
   avatarSeed: 'avatarSeed',
+  /** 累计小憩次数与时长。以本地为准，结束页不该等网络 */
+  tally: 'tally',
 } as const
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys]

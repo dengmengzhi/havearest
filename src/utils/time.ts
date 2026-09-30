@@ -72,3 +72,25 @@ export function remainingSeconds(startAt: number, durationMinutes: number, now: 
 export function elapsedSeconds(startAt: number, now: number): number {
   return Math.max(0, Math.floor((now - startAt) / 1000))
 }
+
+/**
+ * 结束页的一句话。
+ *
+ * 按实际时长分档，而不是固定一句 —— 不管歇 10 秒还是 10 分钟都说同一句，
+ * 用第二次就失效了。这和 PRD F2 对问候语的要求（当天不重复）是同一个道理：
+ * 说话要贴当下，否则用户立刻知道那只是个占位。
+ */
+export function resolveDoneNote(seconds: number): string {
+  const s = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0
+
+  // 没真正开始计时就到了结束页，别硬凑一句鼓励
+  if (s === 0)
+    return '这次还没开始呢'
+  if (s < 60)
+    return '这就回去了？'
+  if (s < 180)
+    return '够眼睛歇一歇了'
+  if (s < 420)
+    return '刚好够脑子转个身'
+  return '歇透了，回去吧'
+}

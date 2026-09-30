@@ -43,8 +43,12 @@ page {
   // 隐蔽性：全局低饱和、无强调色（R4）
 }
 
+// textarea / input 必须一起设：它们的默认 box-sizing 是 content-box，
+// 宽度 100% 加上内边距就会溢出容器（关于页的反馈框曾经顶出屏幕右边）
 view,
-text {
+text,
+textarea,
+input {
   box-sizing: border-box;
 }
 </style>

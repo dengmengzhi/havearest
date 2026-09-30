@@ -57,6 +57,28 @@
         "node_modules",
         "node_modules/**/*"
       ]
+    },
+    {
+      "name": "finishSession",
+      "timeout": 5,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
+    },
+    {
+      "name": "getRanking",
+      "timeout": 5,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "ignore": [
+        "node_modules",
+        "node_modules/**/*"
+      ]
     }
   ]
 }
